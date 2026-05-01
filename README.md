@@ -691,10 +691,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Questions or Issues?
 
-- 📧 **Email**: [contact@example.com]
-- 💬 **GitHub Issues**: [procurepilot/issues](https://github.com/yourusername/procurepilot/issues)
-- 🐦 **Twitter**: [@yourhandle](https://twitter.com/yourhandle)
-- 💼 **LinkedIn**: [Your Profile](https://linkedin.com/in/yourprofile)
+- 📧 **Email**: [hariktm05@gmail.com]
 
 ---
 
