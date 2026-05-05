@@ -1,6 +1,6 @@
 /**
  * Procurement-related TypeScript types
- * Aligned with backend FastAPI schemas
+ * Aligned with backend FastAPI schemas (ProcurePilot v0.2.0)
  */
 
 // ============================================================================
@@ -22,6 +22,7 @@ export enum ProcurementCategory {
   CONSTRUCTION = "CONSTRUCTION",
   EQUIPMENT = "EQUIPMENT",
   CONSULTING = "CONSULTING",
+  WORKS = "WORKS",
   OTHER = "OTHER",
 }
 
@@ -47,13 +48,18 @@ export interface ProcurementRequest {
   description: string;
   category: ProcurementCategory;
   budget?: number;
+  budget_currency?: string;  // Default: INR
   urgency: ProcurementUrgency;
   department?: string;
   preferred_supplier?: string;
+  vendor_gstin?: string;
+  vendor_pan?: string;
+  msme_registered: boolean;
+  udyam_number?: string;
 }
 
 // ============================================================================
-// Workflow Models (Internal)
+// Workflow Models (Internal — returned by backend)
 // ============================================================================
 
 export interface NormalizedRequest {
@@ -63,10 +69,14 @@ export interface NormalizedRequest {
   normalized_description: string;
   category: string;
   budget_amount?: number;
-  budget_currency: string;
+  budget_currency: string;  // Default: INR
   urgency_level: string;
   department?: string;
   preferred_supplier?: string;
+  vendor_gstin?: string;
+  vendor_pan?: string;
+  msme_registered: boolean;
+  udyam_number?: string;
 }
 
 export interface Requirement {
@@ -109,6 +119,12 @@ export interface RecommendationItem {
 // ============================================================================
 
 export interface AnalysisResponse {
+  // Metadata
+  request_id: string;
+  trace_id: string;
+  timestamp: string;
+  processing_time_ms: number;
+
   // Summary
   summary: string;
 
@@ -121,22 +137,36 @@ export interface AnalysisResponse {
   // Recommendations
   recommendation_items: RecommendationItem[];
   recommendation_summary: string;
+
+  // Confidence
   confidence_score: number;
   confidence_label: "LOW" | "MEDIUM" | "HIGH";
   confidence_reason: string;
 
-  // Metadata
-  processing_time_ms: number;
-  request_id: string;
-  trace_id: string;
-  timestamp: string;
+  // Compliance
+  compliance_status: "COMPLIANT" | "NON_COMPLIANT" | "PENDING_REVIEW";
+  compliance_reasoning: string;
+
+  // Approval Suggestion
+  approval_suggestion?: ApprovalRouting | null;
+}
+
+export interface ApprovalRouting {
+  level: "L1" | "L2" | "L3";
+  role: string;
+  reason: string;
 }
 
 // ============================================================================
 // Request History Models
 // ============================================================================
 
-export type ProcurementRequestStatus = "SUBMITTED" | "ANALYZED";
+export type ProcurementRequestStatus =
+  | "SUBMITTED"
+  | "UNDER_REVIEW"
+  | "ANALYZED"
+  | "APPROVED"
+  | "REJECTED";
 
 export interface ProcurementRequestSummary {
   id: number;
@@ -158,22 +188,66 @@ export interface ProcurementRequestDetail {
   urgency: string;
   department?: string;
   preferred_supplier?: string;
+  vendor_gstin?: string;
+  vendor_pan?: string;
+  msme_registered: boolean;
+  udyam_number?: string;
   created_at: string;
   status: ProcurementRequestStatus;
   latest_analysis?: AnalysisResponse | null;
 }
 
 // ============================================================================
+// Vendor Management
+// ============================================================================
+
+export interface Vendor {
+  id: number;
+  legal_name: string;
+  trade_name?: string | null;
+  entity_type: string;
+  gstin: string;
+  pan_number: string;
+  cin_number?: string | null;
+  msme_registered: boolean;
+  udyam_number?: string | null;
+  msme_type?: "MICRO" | "SMALL" | "MEDIUM" | null;
+  contact_email: string;
+  contact_phone?: string | null;
+  address: string;
+  compliance_status: "PENDING" | "VERIFIED" | "REJECTED";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorCreate {
+  legal_name: string;
+  trade_name?: string;
+  entity_type: string;
+  gstin: string;
+  pan_number: string;
+  cin_number?: string;
+  msme_registered: boolean;
+  udyam_number?: string;
+  msme_type?: "MICRO" | "SMALL" | "MEDIUM";
+  contact_email: string;
+  contact_phone?: string;
+  address: string;
+}
+
+export interface VendorListResponse {
+  vendors: Vendor[];
+  total: number;
+}
+// ============================================================================
 // Error Models
 // ============================================================================
 
 export interface ErrorResponse {
-  error: {
-    code: string;
-    detail: string;
-    request_id?: string;
-    trace_id?: string;
-  };
+  error: string;
+  detail: string;
+  request_id?: string;
+  trace_id?: string;
 }
 
 // ============================================================================
@@ -218,4 +292,39 @@ export interface ApiError {
   message: string;
   code?: string;
   requestId?: string;
+}
+
+// ============================================================================
+// Budget / Currency Helpers
+// ============================================================================
+
+/**
+ * Format a budget amount for display.
+ * Defaults to INR formatting (₹ symbol with Indian number system).
+ */
+export function formatBudget(
+  amount: number | undefined,
+  currency: string = "INR"
+): string {
+  if (amount == null) return "—";
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+/**
+ * Get the status badge colour class for a procurement request status.
+ */
+export function getStatusColor(status: ProcurementRequestStatus): string {
+  switch (status) {
+    case "SUBMITTED":     return "badge-primary";
+    case "UNDER_REVIEW":  return "badge-warning";
+    case "ANALYZED":      return "badge-primary";
+    case "APPROVED":      return "badge-success";
+    case "REJECTED":      return "badge-danger";
+    default:              return "badge-primary";
+  }
 }

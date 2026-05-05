@@ -10,8 +10,7 @@ from app.agents.prompts.extraction import (
     EXTRACT_REQUIREMENTS_SYSTEM_PROMPT,
     get_extract_prompt,
 )
-from app.agents.state import WorkflowState
-from app.api.v1.schemas.procurement import Requirement
+from app.agents.state import WorkflowState, RequirementInternal
 from app.core.logging import get_logger
 from app.llm.groq_client import GroqClient
 
@@ -51,9 +50,9 @@ async def extract_requirements_node(state: WorkflowState) -> WorkflowState:
             category=state.normalized_request.category,
         )
         
-        # Call LLM for requirement extraction
+        # Call LLM for requirement extraction (async)
         groq_client = GroqClient()
-        extraction_data = groq_client.extract_json(
+        extraction_data = await groq_client.extract_json(
             prompt=prompt,
             system_prompt=EXTRACT_REQUIREMENTS_SYSTEM_PROMPT,
             temperature=0.3,
@@ -72,7 +71,7 @@ async def extract_requirements_node(state: WorkflowState) -> WorkflowState:
         requirements_list = extraction_data.get("requirements", [])
         for req_data in requirements_list:
             try:
-                requirement = Requirement(
+                requirement = RequirementInternal(
                     id=req_data.get("id", f"req-{uuid4().hex[:8]}"),
                     name=req_data.get("name", ""),
                     description=req_data.get("description", ""),

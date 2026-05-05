@@ -9,11 +9,11 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 python-dotenv==1.0.0
 
-# Database (SQLAlchemy + SQLModel)
+# Database (SQLAlchemy async)
 sqlalchemy==2.0.23
-sqlmodel==0.0.14
 alembic==1.13.0
-aiosqlite==0.19.0  # Async SQLite driver
+aiosqlite==0.19.0  # Async SQLite driver for dev
+asyncpg==0.29.0    # Async PostgreSQL driver for production
 
 # LLM and Agent Orchestration
 langchain==0.1.0
@@ -23,9 +23,6 @@ groq==0.4.1
 # Vector Database and Embeddings
 chromadb==0.4.21
 sentence-transformers==2.2.2
-
-# Data Validation and Serialization
-pydantic==2.5.0
 
 # Async and Concurrency
 httpx==0.25.0
@@ -39,7 +36,7 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 pytest-mock==3.12.0
-httpx==0.25.0  # For TestClient
+# httpx is also used for TestClient (already listed above)
 
 # Code Quality
 black==23.12.0

@@ -32,6 +32,7 @@ In enterprise procurement, policy compliance, risk management, and decision velo
 - **Speed**: Analysis in seconds, not hours
 - **Consistency**: AI-driven evaluation removes human bias
 - **Compliance**: Every decision backed by policy context
+- **Indian Procurement Ready**: Built-in support for GFR guidelines, GSTIN, PAN, and MSME/Udyam verification
 - **Auditability**: Complete analysis trail for every request
 - **Scalability**: Process unlimited requests without additional staff
 
@@ -77,10 +78,11 @@ In enterprise procurement, policy compliance, risk management, and decision velo
 - Access historical analyses with full context
 - Complete audit trail for compliance
 
-🔍 **Advanced Search & Filtering**
-- Filter requests by status, category, budget, urgency
-- Search request history
-- View detailed analysis for each request
+🏢 **Vendor Onboarding & Compliance (Indian Context)**
+- Dynamic Vendor Registry handling legal entities
+- Automated GSTIN & PAN format validation and cross-checking
+- MSME/Udyam classification and verification
+- Visual compliance badges and approval routing rules
 
 ---
 
@@ -641,13 +643,20 @@ npm test
 
 ## Future Roadmap
 
-### Phase 2 (Q2 2024)
-- [ ] User authentication & role-based access
-- [ ] Multiple policy database support
-- [ ] Advanced analytics dashboard
-- [ ] Export recommendations to PDF
+### Phase 2 (Completed)
+- [x] Request History / Submitted Requests Views
+- [x] Indian Procurement Readiness (GSTIN, PAN, MSME, GFR 2017)
+- [x] Vendor Onboarding & Management Module
+- [x] Dynamic Approval Matrix Engine
 
-### Phase 3 (Q3 2024)
+### Phase 3 (Completed)
+- [x] Production-grade API validation and schema consistency
+- [x] Advanced Confidence Scoring logic (penalizing missing vendors)
+- [x] Security Hardening (Auth & Telemetry middleware placeholders)
+- [x] Testing suite for Service, API, and Core logic
+- [x] Portfolio-ready documentation and developer experience improvements
+
+### Phase 4 (Future)
 - [ ] Integration with procurement systems (SAP, Coupa, Ariba)
 - [ ] Approval workflow automation
 - [ ] Supplier performance tracking

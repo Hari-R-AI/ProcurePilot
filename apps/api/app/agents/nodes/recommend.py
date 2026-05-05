@@ -11,8 +11,7 @@ from app.agents.prompts.recommendation import (
     GENERATE_RECOMMENDATION_SYSTEM_PROMPT,
     get_recommendation_prompt,
 )
-from app.agents.state import WorkflowState
-from app.api.v1.schemas.procurement import RecommendationItem
+from app.agents.state import WorkflowState, RecommendationItemInternal
 from app.core.logging import get_logger
 from app.llm.groq_client import GroqClient
 
@@ -121,9 +120,9 @@ async def generate_recommendation_node(state: WorkflowState) -> WorkflowState:
             },
         )
         
-        # Call LLM for recommendation generation
+        # Call LLM for recommendation generation (async)
         groq_client = GroqClient()
-        recommendation_data = groq_client.extract_json(
+        recommendation_data = await groq_client.extract_json(
             prompt=prompt,
             system_prompt=GENERATE_RECOMMENDATION_SYSTEM_PROMPT,
             temperature=0.5,
@@ -153,7 +152,7 @@ async def generate_recommendation_node(state: WorkflowState) -> WorkflowState:
         
         for i, rec_data in enumerate(rec_items):
             try:
-                rec_item = RecommendationItem(
+                rec_item = RecommendationItemInternal(
                     id=rec_data.get("id", f"rec-{uuid4().hex[:8]}"),
                     action=rec_data.get("action", ""),
                     description=rec_data.get("description", ""),

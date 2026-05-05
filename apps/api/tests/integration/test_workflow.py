@@ -28,11 +28,9 @@ class TestProcurementWorkflow:
 
         # Run workflow
         result = await run_procurement_workflow(
-            original_request=workflow_state.original_request,
+            request_data={"description": workflow_state.original_request},
             request_id=workflow_state.request_id,
             trace_id=workflow_state.trace_id,
-            llm=llm,
-            retriever=MockRetriever(),
         )
 
         # Verify result structure
@@ -53,11 +51,9 @@ class TestProcurementWorkflow:
         llm.reset()
 
         result = await run_procurement_workflow(
-            original_request=workflow_state.original_request,
+            request_data={"description": workflow_state.original_request},
             request_id=workflow_state.request_id,
             trace_id=workflow_state.trace_id,
-            llm=llm,
-            retriever=MockRetriever(),
         )
 
         # Each node calls extract_json at least once
@@ -70,11 +66,9 @@ class TestProcurementWorkflow:
         llm = MockGroqClient()
 
         result = await run_procurement_workflow(
-            original_request=workflow_state.original_request,
+            request_data={"description": workflow_state.original_request},
             request_id=workflow_state.request_id,
             trace_id=workflow_state.trace_id,
-            llm=llm,
-            retriever=MockRetriever(),
         )
 
         assert not result.has_errors()
@@ -86,11 +80,9 @@ class TestProcurementWorkflow:
         llm = MockGroqClient()
 
         result = await run_procurement_workflow(
-            original_request=workflow_state.original_request,
+            request_data={"description": workflow_state.original_request},
             request_id=workflow_state.request_id,
             trace_id=workflow_state.trace_id,
-            llm=llm,
-            retriever=MockRetriever(),
         )
 
         assert 0.0 <= result.confidence_score <= 1.0
@@ -101,11 +93,9 @@ class TestProcurementWorkflow:
         llm = MockGroqClient()
 
         result = await run_procurement_workflow(
-            original_request=workflow_state.original_request,
+            request_data={"description": workflow_state.original_request},
             request_id=workflow_state.request_id,
             trace_id=workflow_state.trace_id,
-            llm=llm,
-            retriever=MockRetriever(),
         )
 
         assert result.processing_time_ms > 0

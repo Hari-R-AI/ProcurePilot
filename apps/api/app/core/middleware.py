@@ -109,7 +109,7 @@ def setup_middleware(app: FastAPI) -> None:
     # CORS middleware (must be added early in the stack)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=settings.parsed_cors_origins,
         allow_credentials=settings.cors_credentials,
         allow_methods=settings.cors_methods,
         allow_headers=settings.cors_headers,

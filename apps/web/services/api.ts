@@ -11,6 +11,9 @@ import type {
     ProcurementRequestDetail,
     ProcurementRequestSummary,
     ReadinessResponse,
+    Vendor,
+    VendorCreate,
+    VendorListResponse,
 } from "@/types/procurement";
 import axios, { AxiosError, AxiosInstance } from "axios";
 
@@ -206,6 +209,66 @@ export const api = {
       const response = await axiosInstance.get<ProcurementRequestDetail>(
         `/api/v1/procurement/requests/${id}`
       );
+      return response.data;
+    },
+
+    /**
+     * Update and re-analyze a procurement request
+     * PUT /api/v1/procurement/requests/{id}
+     */
+    async update(id: number, request: ProcurementRequest): Promise<AnalysisResponse> {
+      const response = await axiosInstance.put<AnalysisResponse>(
+        `/api/v1/procurement/requests/${id}`,
+        request
+      );
+      return response.data;
+    },
+
+    /**
+     * Delete a procurement request
+     * DELETE /api/v1/procurement/requests/{id}
+     */
+    async delete(id: number): Promise<void> {
+      await axiosInstance.delete(`/api/v1/procurement/requests/${id}`);
+    },
+
+    /**
+     * Download a PDF report of the procurement request
+     * GET /api/v1/procurement/requests/{id}/report.pdf
+     */
+    async downloadReport(id: number): Promise<void> {
+      const response = await axiosInstance.get(
+        `/api/v1/procurement/requests/${id}/report.pdf`,
+        {
+          responseType: "blob",
+        }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Procurement_Report_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    },
+  },
+
+  /**
+   * Vendor Management Endpoints
+   */
+  vendors: {
+    async onboard(vendor: VendorCreate): Promise<Vendor> {
+      const response = await axiosInstance.post<Vendor>("/api/v1/vendors", vendor);
+      return response.data;
+    },
+    async list(skip = 0, limit = 50): Promise<VendorListResponse> {
+      const response = await axiosInstance.get<VendorListResponse>("/api/v1/vendors", { params: { skip, limit } });
+      return response.data;
+    },
+    async getById(id: number): Promise<Vendor> {
+      const response = await axiosInstance.get<Vendor>(`/api/v1/vendors/${id}`);
       return response.data;
     },
   },

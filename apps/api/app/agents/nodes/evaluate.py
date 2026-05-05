@@ -10,8 +10,7 @@ from app.agents.prompts.risk_eval import (
     EVALUATE_RISK_SYSTEM_PROMPT,
     get_risk_evaluation_prompt,
 )
-from app.agents.state import WorkflowState
-from app.api.v1.schemas.procurement import RiskFlag
+from app.agents.state import WorkflowState, RiskFlagInternal
 from app.core.logging import get_logger
 from app.llm.groq_client import GroqClient
 
@@ -64,9 +63,9 @@ async def evaluate_risk_node(state: WorkflowState) -> WorkflowState:
             urgency=state.normalized_request.urgency_level,
         )
         
-        # Call LLM for risk evaluation
+        # Call LLM for risk evaluation (async)
         groq_client = GroqClient()
-        risk_data = groq_client.extract_json(
+        risk_data = await groq_client.extract_json(
             prompt=prompt,
             system_prompt=EVALUATE_RISK_SYSTEM_PROMPT,
             temperature=0.3,
@@ -86,7 +85,7 @@ async def evaluate_risk_node(state: WorkflowState) -> WorkflowState:
         risk_flags = risk_data.get("risk_flags", [])
         for risk_data_item in risk_flags:
             try:
-                risk_flag = RiskFlag(
+                risk_flag = RiskFlagInternal(
                     id=risk_data_item.get("id", f"risk-{uuid4().hex[:8]}"),
                     severity=risk_data_item.get("severity", "MEDIUM"),
                     category=risk_data_item.get("category", "other"),

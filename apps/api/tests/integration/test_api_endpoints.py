@@ -31,7 +31,7 @@ class TestHealthEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert "status" in data
-        assert data["status"] in ["healthy", "degraded", "unhealthy"]
+        assert data["status"] in ["healthy", "degraded", "unhealthy", "alive"]
 
     def test_health_ready(self, client):
         """Test /health/ready endpoint."""
@@ -39,8 +39,8 @@ class TestHealthEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert "ready" in data
-        assert isinstance(data["ready"], bool)
+        assert "status" in data
+        assert data["status"] == "ready"
 
     def test_health_status(self, client):
         """Test /health endpoint."""

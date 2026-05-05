@@ -35,6 +35,7 @@ def calculate_confidence(state: WorkflowState) -> tuple[float, str, str]:
         "risks_identified": 0.0,
         "budget_present": 0.0,
         "policy_quality": 0.0,
+        "vendor_data_present": 0.0,
     }
     
     # Factor 1: Normalized request present (15 points)
@@ -98,9 +99,13 @@ def calculate_confidence(state: WorkflowState) -> tuple[float, str, str]:
     if state.risk_assessment:
         factors["risks_identified"] = 0.10
     
-    # Factor 5: Budget presence (10 points)
+    # Factor 5: Budget presence (5 points)
     if state.normalized_request and state.normalized_request.budget_amount:
-        factors["budget_present"] = 0.10
+        factors["budget_present"] = 0.05
+        
+    # Factor 6: Indian Vendor Compliance data (10 points)
+    if state.normalized_request and state.normalized_request.vendor_gstin and state.normalized_request.vendor_pan:
+        factors["vendor_data_present"] = 0.10
     
     # Calculate total confidence (0-1)
     confidence_score = sum(factors.values())
@@ -154,7 +159,10 @@ def calculate_confidence(state: WorkflowState) -> tuple[float, str, str]:
     
     if not state.normalized_request or not state.normalized_request.budget_amount:
         reason_parts.append("missing budget details")
-    
+        
+    if state.normalized_request and state.normalized_request.vendor_gstin:
+        reason_parts.append("vendor compliance verifiable")
+
     confidence_reason = ", ".join(reason_parts) or "Analysis complete"
     
     logger.info(

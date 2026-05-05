@@ -11,6 +11,7 @@ Orchestrates the 5 nodes:
 import time
 from typing import Optional
 
+from app.agents.nodes.compliance import compliance_check_node
 from app.agents.nodes.evaluate import evaluate_risk_node
 from app.agents.nodes.extract import extract_requirements_node
 from app.agents.nodes.normalize import normalize_request_node
@@ -127,6 +128,19 @@ async def run_procurement_workflow(
         if state.has_errors():
             logger.warning(
                 "Errors in evaluate_risk_node, continuing...",
+                extra={"errors": state.errors},
+            )
+            
+        # Node 4.5: Compliance Check
+        logger.info(
+            "Executing node: compliance_check_node",
+            extra={"request_id": request_id},
+        )
+        state = await compliance_check_node(state)
+        
+        if state.has_errors():
+            logger.warning(
+                "Errors in compliance_check_node, continuing...",
                 extra={"errors": state.errors},
             )
         

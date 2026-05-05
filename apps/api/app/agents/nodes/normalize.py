@@ -10,8 +10,7 @@ from app.agents.prompts.normalization import (
     NORMALIZE_REQUEST_SYSTEM_PROMPT,
     get_normalize_prompt,
 )
-from app.agents.state import WorkflowState
-from app.api.v1.schemas.procurement import NormalizedRequest
+from app.agents.state import WorkflowState, NormalizedRequestInternal
 from app.core.logging import get_logger
 from app.llm.groq_client import GroqClient
 
@@ -59,6 +58,10 @@ async def normalize_request_node(state: WorkflowState) -> WorkflowState:
         urgency = request_data.get("urgency", "MEDIUM")
         department = request_data.get("department")
         preferred_supplier = request_data.get("preferred_supplier")
+        vendor_gstin = request_data.get("vendor_gstin")
+        vendor_pan = request_data.get("vendor_pan")
+        msme_registered = request_data.get("msme_registered", False)
+        udyam_number = request_data.get("udyam_number")
         
         # Generate prompt
         prompt = get_normalize_prompt(
@@ -71,9 +74,9 @@ async def normalize_request_node(state: WorkflowState) -> WorkflowState:
             preferred_supplier=preferred_supplier,
         )
         
-        # Call LLM for normalization
+        # Call LLM for normalization (async)
         groq_client = GroqClient()
-        normalized_data = groq_client.extract_json(
+        normalized_data = await groq_client.extract_json(
             prompt=prompt,
             system_prompt=NORMALIZE_REQUEST_SYSTEM_PROMPT,
             temperature=0.3,
@@ -88,18 +91,22 @@ async def normalize_request_node(state: WorkflowState) -> WorkflowState:
             },
         )
         
-        # Create NormalizedRequest object
-        state.normalized_request = NormalizedRequest(
+        # Create internal NormalizedRequest object (agent-layer type)
+        state.normalized_request = NormalizedRequestInternal(
             original_title=title,
             original_description=description,
             normalized_title=normalized_data.get("normalized_title", title),
             normalized_description=normalized_data.get("normalized_description", description),
             category=normalized_data.get("extracted_category", category),
             budget_amount=normalized_data.get("extracted_budget"),
-            budget_currency=normalized_data.get("extracted_budget_currency", "USD"),
+            budget_currency=normalized_data.get("extracted_budget_currency", "INR"),
             urgency_level=normalized_data.get("extracted_urgency", urgency),
-            department=normalized_data.get("extracted_department"),
-            preferred_supplier=normalized_data.get("extracted_supplier"),
+            department=normalized_data.get("extracted_department", department),
+            preferred_supplier=normalized_data.get("extracted_supplier", preferred_supplier),
+            vendor_gstin=vendor_gstin,
+            vendor_pan=vendor_pan,
+            msme_registered=msme_registered,
+            udyam_number=udyam_number,
         )
         
         logger.info(

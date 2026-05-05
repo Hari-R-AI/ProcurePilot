@@ -1,13 +1,13 @@
-"""Groq LLM API wrapper client.
+"""Async Groq LLM API wrapper client.
 
-Provides a clean interface to Groq's API for structured extraction
+Provides a clean async interface to Groq's API for structured extraction
 and recommendation generation tasks.
 """
 
 import json
 from typing import Any, Optional
 
-from groq import Groq
+from groq import AsyncGroq
 
 from app.core.config import get_settings
 from app.core.exceptions import LLMException
@@ -17,65 +17,75 @@ logger = get_logger(__name__)
 
 
 class GroqClient:
-    """Wrapper for Groq API interactions.
-    
+    """Async wrapper for Groq API interactions.
+
     Handles:
-    - LLM initialization from environment
-    - Structured JSON extraction
-    - Error handling and retries
-    - Logging and tracing
+    - LLM initialisation from environment
+    - Structured JSON extraction (async)
+    - Text generation (async)
+    - Error handling and logging
+
+    Example:
+        >>> client = GroqClient()
+        >>> result = await client.extract_json(prompt="...", system_prompt="...")
     """
 
     def __init__(self) -> None:
-        """Initialize Groq client from settings."""
+        """Initialise Groq async client from settings."""
         settings = get_settings()
-        
+
         if not settings.groq_api_key:
             raise LLMException(
-                detail="GROQ_API_KEY environment variable is not set. "
-                "Get one from https://console.groq.com/",
+                detail=(
+                    "GROQ_API_KEY is not configured. "
+                    "Set PROCUREPILOT_GROQ_API_KEY in your environment or .env file. "
+                    "Get a key at: https://console.groq.com/"
+                ),
                 code="LLM_CONFIG_ERROR",
             )
-        
-        self.client = Groq(api_key=settings.groq_api_key)
+
+        self.client = AsyncGroq(api_key=settings.groq_api_key)
         self.model = settings.groq_model
         logger.info(
-            f"Initialized GroqClient with model: {self.model}",
+            "Initialised AsyncGroqClient",
             extra={"model": self.model},
         )
 
-    def extract_json(
+    async def extract_json(
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
         temperature: float = 0.3,
         max_tokens: int = 2000,
     ) -> dict[str, Any]:
-        """Extract structured JSON from text using LLM.
-        
+        """Extract structured JSON from text using LLM (async).
+
         Args:
-            prompt: The user prompt/question.
-            system_prompt: Optional system message. Defaults to "You are a helpful assistant."
-            temperature: Creativity level (0-1). Lower = more deterministic.
+            prompt: The user prompt / question.
+            system_prompt: Optional system message. Defaults to a JSON-focused prompt.
+            temperature: Creativity level (0–1). Lower = more deterministic.
             max_tokens: Maximum tokens in response.
-            
+
         Returns:
             dict: Parsed JSON response from the LLM.
-            
+
         Raises:
             LLMException: If the LLM call fails or returns invalid JSON.
-            
+
         Example:
             >>> client = GroqClient()
-            >>> result = client.extract_json(
+            >>> result = await client.extract_json(
             ...     prompt="Extract requirements from: ...",
             ...     system_prompt="You are a procurement expert. Return valid JSON."
             ... )
             >>> print(result["requirements"])
         """
         if system_prompt is None:
-            system_prompt = "You are a helpful assistant that returns valid JSON."
-        
+            system_prompt = (
+                "You are a helpful assistant. "
+                "Always respond with valid JSON and nothing else."
+            )
+
         try:
             logger.debug(
                 "Calling Groq API for structured extraction",
@@ -85,8 +95,8 @@ class GroqClient:
                     "max_tokens": max_tokens,
                 },
             )
-            
-            response = self.client.chat.completions.create(
+
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -95,11 +105,11 @@ class GroqClient:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-            
+
             # Extract response text
             response_text = response.choices[0].message.content.strip()
-            
-            # Try to parse JSON
+
+            # Try direct JSON parse first
             try:
                 result = json.loads(response_text)
                 logger.debug(
@@ -107,27 +117,43 @@ class GroqClient:
                     extra={"keys": list(result.keys()) if isinstance(result, dict) else None},
                 )
                 return result
-            except json.JSONDecodeError as e:
-                # Try to extract JSON from markdown code blocks
-                if "```json" in response_text:
-                    json_str = response_text.split("```json")[1].split("```")[0].strip()
+            except json.JSONDecodeError:
+                pass
+
+            # Try extracting from ```json ... ``` markdown fences
+            if "```json" in response_text:
+                json_str = response_text.split("```json")[1].split("```")[0].strip()
+                try:
                     result = json.loads(json_str)
-                    logger.debug(
-                        "Extracted JSON from markdown code block",
-                        extra={"keys": list(result.keys()) if isinstance(result, dict) else None},
-                    )
+                    logger.debug("Extracted JSON from markdown code block")
                     return result
-                raise LLMException(
-                    detail=f"LLM returned invalid JSON: {str(e)}",
-                    code="LLM_INVALID_JSON",
-                )
-        
+                except json.JSONDecodeError:
+                    pass
+
+            # Try extracting from ``` ... ``` (no language tag)
+            if "```" in response_text:
+                json_str = response_text.split("```")[1].split("```")[0].strip()
+                try:
+                    result = json.loads(json_str)
+                    logger.debug("Extracted JSON from generic code block")
+                    return result
+                except json.JSONDecodeError:
+                    pass
+
+            raise LLMException(
+                detail=f"LLM returned non-JSON response: {response_text[:200]}",
+                code="LLM_INVALID_JSON",
+            )
+
+        except LLMException:
+            raise
         except Exception as e:
             logger.error(
-                f"Groq API call failed: {str(e)}",
+                "Groq API call failed",
                 extra={
                     "model": self.model,
                     "error_type": type(e).__name__,
+                    "error": str(e),
                 },
                 exc_info=True,
             )
@@ -136,30 +162,30 @@ class GroqClient:
                 code="LLM_API_ERROR",
             ) from e
 
-    def generate_text(
+    async def generate_text(
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 1500,
     ) -> str:
-        """Generate natural language text from prompt.
-        
+        """Generate natural language text from prompt (async).
+
         Args:
             prompt: The user prompt.
             system_prompt: Optional system message.
             temperature: Creativity level.
             max_tokens: Maximum tokens in response.
-            
+
         Returns:
             str: Generated text response.
-            
+
         Raises:
             LLMException: If the LLM call fails.
         """
         if system_prompt is None:
-            system_prompt = "You are a helpful assistant."
-        
+            system_prompt = "You are a helpful procurement assistant."
+
         try:
             logger.debug(
                 "Calling Groq API for text generation",
@@ -168,8 +194,8 @@ class GroqClient:
                     "temperature": temperature,
                 },
             )
-            
-            response = self.client.chat.completions.create(
+
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -178,14 +204,17 @@ class GroqClient:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-            
+
             text = response.choices[0].message.content.strip()
             logger.debug("Successfully generated text")
             return text
-        
+
+        except LLMException:
+            raise
         except Exception as e:
             logger.error(
-                f"Groq API text generation failed: {str(e)}",
+                "Groq API text generation failed",
+                extra={"error": str(e)},
                 exc_info=True,
             )
             raise LLMException(

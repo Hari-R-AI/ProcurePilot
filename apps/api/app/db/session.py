@@ -26,7 +26,7 @@ def get_database_url() -> str:
     
     # Convert sqlite:// to sqlite+aiosqlite:// for async support
     if db_url.startswith("sqlite://"):
-        db_url = db_url.replace("sqlite://", "sqlite+aiosqlite:///", 1)
+        db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
     
     return db_url
 

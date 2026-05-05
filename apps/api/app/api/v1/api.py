@@ -6,7 +6,7 @@ router to be included in the FastAPI app.
 
 from fastapi import APIRouter
 
-from app.api.v1.routes import health, procurement
+from app.api.v1.routes import health, procurement, vendors
 
 # Create router
 router = APIRouter()
@@ -14,3 +14,4 @@ router = APIRouter()
 # Include route modules
 router.include_router(health.router, prefix="/health", tags=["health"])
 router.include_router(procurement.router, prefix="/procurement", tags=["procurement"])
+router.include_router(vendors.router, prefix="/vendors", tags=["vendors"])

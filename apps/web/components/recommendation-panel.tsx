@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatINR } from "@/lib/utils";
 import type { AnalysisResponse } from "@/types/procurement";
 import PolicySnippets from "./policy-snippets";
 import RecommendationItems from "./recommendation-items";
@@ -74,6 +74,53 @@ export default function RecommendationPanel({
         </div>
       </div>
 
+      {/* Compliance Status */}
+      <div className={`card border-l-4 ${
+        response.compliance_status === "COMPLIANT" 
+          ? "border-success-500" 
+          : response.compliance_status === "NON_COMPLIANT" 
+            ? "border-danger-500" 
+            : "border-warning-500"
+      }`}>
+        <div className="card-body">
+          <h3 className="font-semibold mb-3 flex items-center justify-between">
+            <span>Indian Procurement Compliance (GFR/CVC)</span>
+            <span className={`px-2 py-1 text-xs font-bold rounded-md ${
+              response.compliance_status === "COMPLIANT" 
+                ? "bg-success-100 text-success-800" 
+                : response.compliance_status === "NON_COMPLIANT" 
+                  ? "bg-danger-100 text-danger-800" 
+                  : "bg-warning-100 text-warning-800"
+            }`}>
+              {response.compliance_status.replace("_", " ")}
+            </span>
+          </h3>
+          <div className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 rounded p-3 font-mono">
+            {response.compliance_reasoning || "No compliance reasoning provided."}
+          </div>
+        </div>
+      </div>
+
+      {/* Approval Matrix Suggestion */}
+      {response.approval_suggestion && (
+        <div className="card border-l-4 border-blue-500">
+          <div className="card-body">
+            <h3 className="font-semibold mb-3">Approval Routing Suggestion</h3>
+            <div className="flex items-center gap-4 mb-2">
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 font-bold rounded-md">
+                {response.approval_suggestion.level}
+              </span>
+              <span className="text-gray-900 font-medium">
+                {response.approval_suggestion.role}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600">
+              {response.approval_suggestion.reason}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Summary */}
       <div className="card">
         <div className="card-body">
@@ -117,7 +164,10 @@ export default function RecommendationPanel({
                   Budget
                 </dt>
                 <dd className="text-sm text-gray-900">
-                  ${response.normalized_request.budget_amount.toLocaleString()}
+                  {formatINR(response.normalized_request.budget_amount)}
+                  {response.normalized_request.budget_currency !== "INR" && (
+                    <span className="text-gray-400 ml-1">({response.normalized_request.budget_currency})</span>
+                  )}
                 </dd>
               </div>
             )}
@@ -129,6 +179,56 @@ export default function RecommendationPanel({
                 <dd className="text-sm text-gray-900">
                   {response.normalized_request.department}
                 </dd>
+              </div>
+            )}
+            
+            {/* Vendor Compliance Info */}
+            {(response.normalized_request.preferred_supplier || 
+              response.normalized_request.vendor_gstin || 
+              response.normalized_request.vendor_pan) && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Supplier Details
+                </h4>
+                <dl className="space-y-2">
+                  {response.normalized_request.preferred_supplier && (
+                    <div className="flex">
+                      <dt className="text-xs font-medium text-gray-500 w-32">Name</dt>
+                      <dd className="text-xs text-gray-900">
+                        {response.normalized_request.preferred_supplier}
+                        {response.normalized_request.msme_registered && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800">
+                            MSME
+                          </span>
+                        )}
+                      </dd>
+                    </div>
+                  )}
+                  {response.normalized_request.vendor_gstin && (
+                    <div className="flex">
+                      <dt className="text-xs font-medium text-gray-500 w-32">GSTIN</dt>
+                      <dd className="text-xs text-gray-900 font-mono">
+                        {response.normalized_request.vendor_gstin}
+                      </dd>
+                    </div>
+                  )}
+                  {response.normalized_request.vendor_pan && (
+                    <div className="flex">
+                      <dt className="text-xs font-medium text-gray-500 w-32">PAN</dt>
+                      <dd className="text-xs text-gray-900 font-mono">
+                        {response.normalized_request.vendor_pan}
+                      </dd>
+                    </div>
+                  )}
+                  {response.normalized_request.udyam_number && (
+                    <div className="flex">
+                      <dt className="text-xs font-medium text-gray-500 w-32">Udyam No.</dt>
+                      <dd className="text-xs text-gray-900 font-mono">
+                        {response.normalized_request.udyam_number}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
               </div>
             )}
           </dl>

@@ -68,7 +68,7 @@ def sample_request():
         "description": "We need 10 high-performance laptops for the engineering team. Budget is $25,000. Needed ASAP.",
         "category": "IT_HARDWARE",
         "budget": 25000.0,
-        "urgency": "high",
+        "urgency": "HIGH",
         "department": "Engineering",
         "preferred_supplier": None,
     }
@@ -84,7 +84,7 @@ def sample_analysis_response():
             "description": "We need 10 high-performance laptops for the engineering team. Budget is $25,000. Needed ASAP.",
             "category": "IT_HARDWARE",
             "budget": 25000.0,
-            "urgency": "high",
+            "urgency": "HIGH",
             "department": "Engineering",
         },
         "extracted_requirements": [
@@ -92,7 +92,7 @@ def sample_analysis_response():
                 "id": "req-1",
                 "title": "Laptop Specification",
                 "description": "High-performance laptops with i7+ processor",
-                "priority": "must-have",
+                "priority": "MUST_HAVE",
                 "estimated_cost": 2500.0,
             }
         ],

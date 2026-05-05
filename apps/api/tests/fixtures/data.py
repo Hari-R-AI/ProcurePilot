@@ -5,7 +5,7 @@ SAMPLE_PROCUREMENT_REQUEST = {
     "description": "We need 10 high-performance laptops for the engineering team. Budget is $25,000. Needed ASAP.",
     "category": "IT_HARDWARE",
     "budget": 25000.0,
-    "urgency": "high",
+    "urgency": "HIGH",
     "department": "Engineering",
     "preferred_supplier": None,
 }
@@ -15,7 +15,7 @@ SAMPLE_NORMALIZED_REQUEST = {
     "description": "High-performance laptops for engineering team",
     "category": "IT_HARDWARE",
     "budget": 25000.0,
-    "urgency": "high",
+    "urgency": "HIGH",
     "department": "Engineering",
 }
 
@@ -24,14 +24,14 @@ SAMPLE_REQUIREMENTS = [
         "id": "req-1",
         "title": "Laptop Specification",
         "description": "High-performance laptops with i7+ processor",
-        "priority": "must-have",
+        "priority": "MUST_HAVE",
         "estimated_cost": 2500.0,
     },
     {
         "id": "req-2",
         "title": "Software Setup",
         "description": "Pre-installed development tools and software",
-        "priority": "should-have",
+        "priority": "SHOULD_HAVE",
         "estimated_cost": 500.0,
     },
 ]
