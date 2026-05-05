@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: procurepilot-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PROCUREPILOT_ENV=development
+      - PROCUREPILOT_DEBUG=true
+      - PROCUREPILOT_DATABASE_URL=sqlite:///./procurepilot.db
+      - PROCUREPILOT_GROQ_API_KEY=${GROQ_API_KEY:-}
+      - PROCUREPILOT_CORS_ORIGINS=["http://localhost:3000", "http://localhost:3001"]
+    volumes:
+      - ./apps/api:/app
+      - api_data:/app/data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - db
+    networks:
+      - procurepilot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # SQLite Database (persisted)
+  db:
+    image: busybox:latest
+    volumes:
+      - db_data:/data
+    networks:
+      - procurepilot-network
+    command: /bin/sh -c "while true; do sleep 1; done"
+
+  # Next.js Frontend
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: procurepilot-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    networks:
+      - procurepilot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: ChromaDB Vector Database (future integration)
+  # chromadb:
+  #   image: ghcr.io/chroma-core/chroma:latest
+  #   container_name: procurepilot-chromadb
+  #   ports:
+  #     - "8001:8000"
+  #   volumes:
+  #     - chromadb_data:/chroma/data
+  #   environment:
+  #     - CHROMA_DB_IMPL=duckdb+parquet
+  #   networks:
+  #     - procurepilot-network
+
+volumes:
+  api_data:
+  db_data:
+  # chromadb_data:
+
+networks:
+  procurepilot-network:
+    driver: bridge
