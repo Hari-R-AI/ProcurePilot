@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type {
+import {
   ProcurementCategory,
-  ProcurementRequest,
+  type ProcurementRequest,
   ProcurementUrgency,
 } from "@/types/procurement";
 import { useState } from "react";
@@ -17,22 +17,22 @@ interface ProcurementRequestFormProps {
 }
 
 const CATEGORIES: { value: ProcurementCategory; label: string }[] = [
-  { value: "IT_HARDWARE", label: "IT Hardware" },
-  { value: "IT_SOFTWARE", label: "IT Software" },
-  { value: "OFFICE_SUPPLIES", label: "Office Supplies" },
-  { value: "SERVICES", label: "Services" },
-  { value: "CONSTRUCTION", label: "Construction" },
-  { value: "EQUIPMENT", label: "Equipment" },
-  { value: "CONSULTING", label: "Consulting" },
-  { value: "WORKS", label: "Works Contract" },
-  { value: "OTHER", label: "Other" },
+  { value: ProcurementCategory.IT_HARDWARE, label: "IT Hardware" },
+  { value: ProcurementCategory.IT_SOFTWARE, label: "IT Software" },
+  { value: ProcurementCategory.OFFICE_SUPPLIES, label: "Office Supplies" },
+  { value: ProcurementCategory.SERVICES, label: "Services" },
+  { value: ProcurementCategory.CONSTRUCTION, label: "Construction" },
+  { value: ProcurementCategory.EQUIPMENT, label: "Equipment" },
+  { value: ProcurementCategory.CONSULTING, label: "Consulting" },
+  { value: ProcurementCategory.WORKS, label: "Works Contract" },
+  { value: ProcurementCategory.OTHER, label: "Other" },
 ];
 
 const URGENCIES: { value: ProcurementUrgency; label: string; hint: string }[] = [
-  { value: "LOW",      label: "Low",      hint: "No immediate deadline" },
-  { value: "MEDIUM",   label: "Medium",   hint: "Needed within 1–4 weeks" },
-  { value: "HIGH",     label: "High",     hint: "Needed within 1 week" },
-  { value: "CRITICAL", label: "Critical", hint: "Immediate — operations at risk" },
+  { value: ProcurementUrgency.LOW, label: "Low", hint: "No immediate deadline" },
+  { value: ProcurementUrgency.MEDIUM, label: "Medium", hint: "Needed within 1–4 weeks" },
+  { value: ProcurementUrgency.HIGH, label: "High", hint: "Needed within 1 week" },
+  { value: ProcurementUrgency.CRITICAL, label: "Critical", hint: "Immediate — operations at risk" },
 ];
 
 interface FormErrors {
@@ -50,9 +50,9 @@ export default function ProcurementRequestForm({
   const [formData, setFormData] = useState<ProcurementRequest>(initialData || {
     title: "",
     description: "",
-    category: "IT_HARDWARE",
+    category: ProcurementCategory.IT_HARDWARE,
     budget: undefined,
-    urgency: "MEDIUM",
+    urgency: ProcurementUrgency.MEDIUM,
     department: undefined,
     preferred_supplier: undefined,
     vendor_gstin: undefined,
