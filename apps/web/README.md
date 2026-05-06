@@ -1,5 +1,5 @@
 # ProcurePilot Frontend
-# Next.js AI Procurement Copilot MVP
+Next.js AI Procurement Copilot MVP
 
 ## Quick Start
 

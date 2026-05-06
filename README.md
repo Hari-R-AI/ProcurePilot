@@ -7,7 +7,6 @@ sdk: docker
 app_port: 7860
 pinned: false
 ---
-
 # ProcurePilot
 
 **An AI-Powered Procurement Copilot for Intelligent Request Analysis and Recommendations**
